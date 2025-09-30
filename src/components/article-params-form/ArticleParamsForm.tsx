@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
 import { ArrowButton } from 'src/ui/arrow-button';
 import { Button } from 'src/ui/button';
@@ -29,10 +29,36 @@ export const ArticleParamsForm = ({
 }: ArticleParamsFormProps) => {
 	const [formState, setFormState] = useState<ArticleStateType>(initialParams);
 	const [isFormOpen, setIsFormOpen] = useState(false);
+	const asideRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		setFormState(initialParams);
 	}, [initialParams]);
+
+	useEffect(() => {
+		if (!isFormOpen) return;
+
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				asideRef.current &&
+				!asideRef.current.contains(event.target as Node)
+			) {
+				setIsFormOpen(false);
+			}
+		};
+
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') setIsFormOpen(false);
+		};
+
+		document.addEventListener('mousedown', handleClickOutside);
+		document.addEventListener('keydown', handleKeyDown);
+
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+			document.removeEventListener('keydown', handleKeyDown);
+		};
+	}, [isFormOpen]);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -62,6 +88,7 @@ export const ArticleParamsForm = ({
 				onClick={() => setIsFormOpen(!isFormOpen)}
 			/>
 			<aside
+				ref={asideRef}
 				className={clsx(styles.container, {
 					[styles.container_open]: isFormOpen,
 				})}>
